@@ -1,0 +1,14 @@
+This is a git repository.
+
+******** ## Regression analysis is a python module for **********
+		1. Linear regression analysis.
+		2. Detrending data.
+		3. Plot regressed meterological variable.
+		4. Plot correlation map. 
+
+
+******** ## MJO_frequency is a python module for **********
+
+		1. calculating phase values from PCs
+		2. Computing MJO frequency in each phase regions for DJF,MAM,JJA and SON
+		3. EOF analysis and its significance testing according to North et al.,1982 criteria. 
