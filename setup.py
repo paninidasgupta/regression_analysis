@@ -8,5 +8,5 @@ setup(
     author_email='panini.dasgupta@gmail.com',
     description='A simple regression analysis (climate variables)',
     packages=find_packages(),    
-    install_requires=['numpy >= 1.11.1', 'matplotlib >= 3.0.3','scipy >= 1.2.1','xarray >= 0.12.0','basemap >= 1.2.0'],
+    install_requires=['numpy >= 1.11.1', 'matplotlib >= 3.0.3','scipy >= 1.2.1','xarray >= 0.12.0'],
 )
