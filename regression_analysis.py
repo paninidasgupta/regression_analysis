@@ -5,10 +5,16 @@ from matplotlib import *
 import scipy as sc
 from scipy.stats import t,norm
 import xarray as xr
+
 from mpl_toolkits.basemap import Basemap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.colors as mplc
 import matplotlib as mpl
+
+import cartopy.crs as ccrs
+import cartopy
+from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
+
 
 
 def detrend(time_series):
@@ -134,8 +140,8 @@ def linear_regress(xx,yy,alpha,opt_detrend,opt_mktest):
         # Student t-distribution Percent Point Function
         # define probability
         if opt_mktest:
-            trend, h, p1, z  = mk_test(x, alpha)
-            h1 =h*1
+            trend, h, p1, z  = mk_test(y, alpha)
+            h1 =h*1.0  
         else:
             #p = 0.025
             df                    =         N-2
@@ -144,9 +150,9 @@ def linear_regress(xx,yy,alpha,opt_detrend,opt_mktest):
             # confirm with cdf
             p1                    =        1.- t.cdf(t_score, df)
             if p1< alpha/2:
-                h1 = 1
+                h1 = 1.0
             else:
-                h1= 0
+                h1= 0.0
                 
     return m,c,p1,corr,h1
 
@@ -193,10 +199,33 @@ def draw_map(data_name,varname,vmin,vmax,inc,titlestr,axiom,cmap='RdBu',hatch='/
     v         =    np.arange(vmin,vmax+inc,inc)
     cs        =    m.contourf(x,y,data[0,:,:],v,norm=norm,extend='both',cmap=plt.cm.get_cmap(cmap))
     axiom.set_title(titlestr)
-    cbar0     = plt.colorbar(cs,ax=axiom,orientation='horizontal',fraction=0.05)
+    cbar0 = plt.colorbar(cs,ax=axiom,orientation='horizontal',fraction=0.05)
 
- 
     
+def draw_map_cartopy(data_name,varname,vmin,vmax,inc,titlestr,sub_no,cmap='RdBu',hatch='/',draw_par=1):
+    ds1           =     xr.open_dataset(data_name)
+    data          =     ds1[varname].values
+    lon           =     ds1.lon
+    lat           =     ds1.lat
+
+    axiom = plt.subplot(sub_no,projection=ccrs.PlateCarree(central_longitude=180.0))
+    v         =    np.arange(vmin,vmax+inc,inc)
+
+    cs=axiom.contourf(lon, lat, data[0,:,:],v, cmap=cmap,extend='both',transform = ccrs.PlateCarree())
+    axiom.coastlines()
+    if draw_par:
+        axiom.gridlines()
+
+    cbar =  plt.colorbar(cs, shrink=0.5, orientation='horizontal',extend='both')
+    axiom.set_xticks([0, 60, 120, 180, 240, 300, 360], crs=ccrs.PlateCarree())
+    axiom.set_yticks([-90, -60, -30, 0, 30, 60, 90], crs=ccrs.PlateCarree())
+    lon_formatter = LongitudeFormatter(zero_direction_label=True)
+    lat_formatter = LatitudeFormatter()
+    axiom.xaxis.set_major_formatter(lon_formatter)
+    axiom.yaxis.set_major_formatter(lat_formatter)
+    axiom.set_title(titlestr)
+
+
 
 class reg_plot(): 
     
@@ -279,7 +308,33 @@ class reg_plot():
         cbar0     = plt.colorbar(cs,ax=axiom,orientation='horizontal',fraction=0.05)
         axiom.set_title(titlestr)
 
-        
+    def draw_regression_cartopy(self,vmin,vmax,inc,titlestr,sub_no,cmap='RdBu',hatch='/',draw_par=1):
+        regress_map,cor_map,significant_map= self.regression_map_making()
+        ds1           =     xr.open_dataset(self.data_name)
+        lon           =     ds1.lon
+        lat           =     ds1.lat
+
+        axiom = plt.subplot(sub_no,projection=ccrs.PlateCarree(central_longitude=180.0))
+        axiom.set_xticks([0, 60, 120, 180, 240, 300, 360], crs=ccrs.PlateCarree())
+        axiom.set_yticks([-90, -60, -30, 0, 30, 60, 90], crs=ccrs.PlateCarree())
+        lon_formatter = LongitudeFormatter(zero_direction_label=True)
+        lat_formatter = LatitudeFormatter()
+        axiom.xaxis.set_major_formatter(lon_formatter)
+        axiom.yaxis.set_major_formatter(lat_formatter)
+
+        v         =    np.arange(vmin,vmax+inc,inc)
+
+        cs=axiom.contourf(lon, lat, regress_map[0,:,:],v, cmap=cmap,extend='both',transform = ccrs.PlateCarree())
+        zm = np.ma.masked_equal(significant_map[0,:,:], 0)
+        axiom.contourf(lon,lat,zm, hatches=hatch,transform = ccrs.PlateCarree(),alpha=0.)
+        axiom.coastlines()
+        if draw_par:
+            axiom.gridlines()
+
+        cbar =  plt.colorbar(cs, fraction=0.05, orientation='horizontal',extend='both')
+        axiom.set_title(titlestr)
+
+
     
     
     def draw_correlation(self,significant_value,vmin,vmax,inc,titlestr,axiom,cmap='RdBu',hatch='/',draw_par=1):
