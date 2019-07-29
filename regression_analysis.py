@@ -5,6 +5,7 @@ from matplotlib import *
 import scipy as sc
 from scipy.stats import t,norm
 import xarray as xr
+from scipy import stats,signal
 
 from mpl_toolkits.basemap import Basemap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -157,6 +158,36 @@ def linear_regress(xx,yy,alpha,opt_detrend,opt_mktest):
     return m,c,p1,corr,h1
 
 
+
+def linear_regress_scipy(xx,yy,alpha,opt_detrend,opt_mktest):
+    xx                    =    np.squeeze(np.asarray(xx))
+    yy                    =    np.squeeze(np.asarray(yy))
+
+    if len(yy)!=len(xx):
+        print("ERROR : Length of the arrays mismatch !")
+    else:
+        N                     =         len(xx)
+        if opt_detrend:
+            x              =        signal.detrend(xx)
+            y               =       signal.detrend(yy)
+        else:
+            x=xx*1
+            y=yy*1
+        #print(x,y)
+        m,c,corr,p1,serr = stats.linregress(x,y)
+        
+        if opt_mktest:
+            trend, h, p1, z  = mk_test(yy, alpha)
+            h1 =h*1.0  
+        else:
+            if p1< alpha:
+                h1 = 1.0
+            else:
+                h1= 0.0
+                
+    return m,c,p1,corr,h1
+
+
 def write_to_netcdf(data_map,output_filename,ex_filename='',varname_ex=''):
     ## for 3D file structure
     d         =   data_map
@@ -266,7 +297,7 @@ class reg_plot():
                     regress_map[0,j,i]= np.nan
                     cor_map[0,j,i]    = np.nan
                 else:
-                    slope,intercept,p1,corr,h1=linear_regress(self.time_series,temp,self.alpha,self.opt_detrend,self.opt_mktest)
+                    slope,intercept,p1,corr,h1=linear_regress_scipy(self.time_series,temp,self.alpha,self.opt_detrend,self.opt_mktest)
                     regress_map[0,j,i]= slope
                     cor_map[0,j,i]    = corr
                     significant_map[0,j,i] = h1
