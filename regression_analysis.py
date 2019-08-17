@@ -354,11 +354,11 @@ class reg_plot():
         axiom.yaxis.set_major_formatter(lat_formatter)
 
         v         =    np.arange(vmin,vmax+inc,inc)
-
+        
         cs=axiom.contourf(lon, lat, regress_map[0,:,:],v, cmap=cmap,extend='both',transform = ccrs.PlateCarree())
-        zm = np.ma.masked_equal(significant_map[0,:,:], 0)
-        axiom.contourf(lon,lat,zm, hatches=hatch,transform = ccrs.PlateCarree(),alpha=0.)
+        axiom.contourf(lon,lat,significant_map[0,:,:], hatches=['',hatch],transform = ccrs.PlateCarree(),alpha=0.)
         axiom.coastlines()
+        
         if draw_par:
             axiom.gridlines()
 
