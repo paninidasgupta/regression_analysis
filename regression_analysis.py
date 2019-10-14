@@ -233,13 +233,13 @@ def draw_map(data_name,varname,vmin,vmax,inc,titlestr,axiom,cmap='RdBu',hatch='/
     cbar0 = plt.colorbar(cs,ax=axiom,orientation='horizontal',fraction=0.05)
 
     
-def draw_map_cartopy(data_name,varname,vmin,vmax,inc,titlestr,sub_no,cmap='RdBu',hatch='/',draw_par=1):
+def draw_map_cartopy(data_name,varname,vmin,vmax,inc,titlestr,s1,s2,sub_no,cmap='RdBu',hatch='/',draw_par=1):
     ds1           =     xr.open_dataset(data_name)
     data          =     ds1[varname].values
     lon           =     ds1.lon
     lat           =     ds1.lat
 
-    axiom = plt.subplot(sub_no,projection=ccrs.PlateCarree(central_longitude=180.0))
+    axiom = plt.subplot(s1,s2,sub_no,projection=ccrs.PlateCarree(central_longitude=180.0))
     v         =    np.arange(vmin,vmax+inc,inc)
 
     cs=axiom.contourf(lon, lat, data[0,:,:],v, cmap=cmap,extend='both',transform = ccrs.PlateCarree())
@@ -339,13 +339,13 @@ class reg_plot():
         cbar0     = plt.colorbar(cs,ax=axiom,orientation='horizontal',fraction=0.05)
         axiom.set_title(titlestr)
 
-    def draw_regression_cartopy(self,vmin,vmax,inc,titlestr,sub_no,cmap='RdBu',hatch='/',draw_par=1):
+    def draw_regression_cartopy(self,vmin,vmax,inc,titlestr,s1,s2,sub_no,cmap='RdBu',hatch='/',draw_par=1):
         regress_map,cor_map,significant_map= self.regression_map_making()
         ds1           =     xr.open_dataset(self.data_name)
         lon           =     ds1.lon
         lat           =     ds1.lat
 
-        axiom = plt.subplot(sub_no,projection=ccrs.PlateCarree(central_longitude=180.0))
+        axiom = plt.subplot(s1,s2,sub_no,projection=ccrs.PlateCarree(central_longitude=180.0))
         axiom.set_xticks([0, 60, 120, 180, 240, 300, 360], crs=ccrs.PlateCarree())
         axiom.set_yticks([-90, -60, -30, 0, 30, 60, 90], crs=ccrs.PlateCarree())
         lon_formatter = LongitudeFormatter(zero_direction_label=True)
@@ -356,7 +356,7 @@ class reg_plot():
         v         =    np.arange(vmin,vmax+inc,inc)
         
         cs=axiom.contourf(lon, lat, regress_map[0,:,:],v, cmap=cmap,extend='both',transform = ccrs.PlateCarree())
-        axiom.contourf(lon,lat,significant_map[0,:,:], hatches=['',hatch],transform = ccrs.PlateCarree(),alpha=0.)
+        axiom.contourf(lon,lat,significant_map[0,:,:], levels=[0,0.5,1],colors='none',hatches=[None,hatch,],transform = ccrs.PlateCarree())
         axiom.coastlines()
         
         if draw_par:
@@ -375,7 +375,7 @@ class reg_plot():
         lat=ds1.lat
         # m = Basemap(projection='ortho',lat_0=0,lon_0=-180,resolution='l')
         #m = Basemap(projection='moll',lon_0=0,lat_0=0,resolution='l')  
-        m = Basemap(projection='mill',lat_ts=10,llcrnrlon=lon.min(),         urcrnrlon =      lon.max(),llcrnrlat=lat.min(),urcrnrlat=lat.max(), resolution='c',ax=axiom)
+        m = Basemap(projection='mill',lat_ts=10,llcrnrlon=lon.min(),         urcrnrlon =    lon.max(),llcrnrlat=lat.min(),urcrnrlat=lat.max(), resolution='c',ax=axiom)
         lon2, lat2 = np.meshgrid(lon,lat)
         x, y       = m(lon2, lat2)
         fig        = plt.figure(figsize=(10,7))
@@ -398,7 +398,31 @@ class reg_plot():
         axiom.set_title(titlestr) 
        
         
+    def draw_correlation_cartopy(self,significant_value,vmin,vmax,inc,titlestr,s1,s2,sub_no,cmap='RdBu',draw_par=1):
+        regress_map,cor_map,significant_map= self.regression_map_making()
+        ds1           =     xr.open_dataset(self.data_name)
+        lon           =     ds1.lon
+        lat           =     ds1.lat
+
+        axiom = plt.subplot(s1,s2,sub_no,projection=ccrs.PlateCarree(central_longitude=180.0))
+        axiom.set_xticks([0, 60, 120, 180, 240, 300, 360], crs=ccrs.PlateCarree())
+        axiom.set_yticks([-90, -60, -30, 0, 30, 60, 90], crs=ccrs.PlateCarree())
+        lon_formatter = LongitudeFormatter(zero_direction_label=True)
+        lat_formatter = LatitudeFormatter()
+        axiom.xaxis.set_major_formatter(lon_formatter)
+        axiom.yaxis.set_major_formatter(lat_formatter)
+
+        v         =    np.arange(vmin,vmax+inc,inc)
+        
+        cs=axiom.contourf(lon, lat, cor_map[0,:,:],v, cmap=cmap,extend='both',transform = ccrs.PlateCarree())
+        axiom.contour(lon,lat,cor_map[0,:,:],levels=[-1*significant_value,significant_value], linewidths=0.5, colors='black', antialiased=True,transform = ccrs.PlateCarree())
+        axiom.coastlines()
+        
+        if draw_par:
+            axiom.gridlines()
+
+        cbar =  plt.colorbar(cs, fraction=0.05, orientation='horizontal',extend='both')
+        axiom.set_title(titlestr)
         
    
       
-
